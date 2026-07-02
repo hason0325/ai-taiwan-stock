@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+
+                    <!-- 標題 -->
+                    <div class="text-center mb-4">
+                        <h1 class="display-5 fw-bold text-primary">
+                            <i class="bi bi-graph-up-arrow"></i> 歷史績效
+                        </h1>
+                        <p class="text-muted">{{ server_time }}</p>
+                    </div>
+
+                    <hr>
+
+                    <!-- 命中率總覽 -->
+                    <h5 class="text-primary">📊 命中率總覽</h5>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0 text-center">
+                                <div class="card-body">
+                                    <h6 class="text-muted">7日命中率</h6>
+                                    <div class="display-4 fw-bold {% if verification.week_accuracy >= 70 %}text-success{% elif verification.week_accuracy >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ verification.week_accuracy }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0 text-center">
+                                <div class="card-body">
+                                    <h6 class="text-muted">30日命中率</h6>
+                                    <div class="display-4 fw-bold {% if verification.month_accuracy >= 70 %}text-success{% elif verification.month_accuracy >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ verification.month_accuracy }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0 text-center">
+                                <div class="card-body">
+                                    <h6 class="text-muted">90日命中率</h6>
+                                    <div class="display-4 fw-bold {% if verification.quarter_accuracy >= 70 %}text-success{% elif verification.quarter_accuracy >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ verification.quarter_accuracy }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 最近預測記錄 -->
+                    <h5 class="text-primary">📋 最近預測記錄</h5>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>日期</th>
+                                    <th>預測</th>
+                                    <th>實際</th>
+                                    <th>開盤誤差</th>
+                                    <th>收盤誤差</th>
+                                    <th>結果</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if history_data %}
+                                    {% for item in history_data %}
+                                    <tr>
+                                        <td>{{ item.date }}</td>
+                                        <td>{{ item.predicted_sentiment }}</td>
+                                        <td>{{ item.actual_sentiment }}</td>
+                                        <td>{{ "%.2f"|format(item.open_error) }}</td>
+                                        <td>{{ "%.2f"|format(item.close_error) }}</td>
+                                        <td>
+                                            {% if item.sentiment_correct %}
+                                                <span class="badge bg-success">✅ 正確</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">❌ 錯誤</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">暫無歷史記錄</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <!-- 統計摘要 -->
+                    <h5 class="text-primary">📈 統計摘要</h5>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center">
+                                    <h6>總預測次數</h6>
+                                    <h3>{{ summary.total_predictions }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center">
+                                    <h6>正確次數</h6>
+                                    <h3 class="text-success">{{ summary.correct_predictions }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center">
+                                    <h6>整體命中率</h6>
+                                    <h3 class="text-primary">{{ summary.overall_accuracy }}%</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 返回按鈕 -->
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-primary btn-lg px-5">
+                            <i class="bi bi-house"></i> 返回首頁
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+/* 專業質感設計 */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+body {
+    background-color: #f8f9fc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+    border-radius: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important;
+}
+
+.display-1 {
+    font-size: 4.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.progress {
+    border-radius: 4px;
+    background-color: #f0f0f0;
+}
+
+.progress-bar {
+    border-radius: 4px;
+    transition: width 1s ease;
+}
+
+/* 儀表板圓環動畫 */
+circle {
+    transition: stroke-dasharray 1s ease;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .display-1 {
+        font-size: 3rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* 自訂 badge */
+.badge {
+    padding: 8px 16px;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+/* 導航欄 */
+.navbar {
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-size: 1.3rem;
+}
+
+/* 按鈕 */
+.btn-primary {
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 36px;
+    font-weight: 600;
+    transition: transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}

@@ -1,0 +1,12 @@
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.5
+APScheduler==3.10.4
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3
+yfinance==0.2.28
+pandas==2.0.3
+numpy==1.24.3
+python-dotenv==1.0.0
+pytz==2023.3

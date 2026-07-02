@@ -1,0 +1,597 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- 標題 -->
+    <div class="text-center mb-3">
+        <h1 class="display-5 fw-bold text-primary">
+            <i class="bi bi-robot"></i> AI 台股分析
+        </h1>
+        <p class="text-muted">{{ report.date }} 盤前決策報告</p>
+        <p class="text-muted small">
+            <i class="bi bi-clock"></i> 伺服器時間：{{ server_time }} (台灣時間)
+        </p>
+        <span class="badge bg-info">即時數據</span>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 第一行：評分卡片 (4欄) -->
+    <!-- ========================================== -->
+    <div class="row g-3">
+        <!-- 多空評分 -->
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">今日多空</h6>
+                    <div class="display-1 fw-bold {% if report.sentiment == '偏多' %}text-danger{% elif report.sentiment == '偏空' %}text-success{% else %}text-warning{% endif %}">
+                        {{ report.stars }}
+                    </div>
+                    <h3 class="{% if report.sentiment == '偏多' %}text-danger{% elif report.sentiment == '偏空' %}text-success{% else %}text-warning{% endif %}">
+                        {{ report.sentiment }}
+                    </h3>
+                    <div class="mt-2">
+                        <span class="badge bg-danger">上漲 {{ report.up_probability }}%</span>
+                        <span class="badge bg-success">下跌 {{ report.down_probability }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 市場熱度儀表板 -->
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">市場熱度</h6>
+                    {% if market_heat %}
+                    <div class="display-1 fw-bold text-{{ market_heat.color }}">
+                        {{ market_heat.score }}
+                    </div>
+                    <h4 class="text-{{ market_heat.color }}">{{ market_heat.level }}</h4>
+                    <small class="text-muted">{{ market_heat.description }}</small>
+                    {% else %}
+                    <div class="display-4 fw-bold text-secondary">--</div>
+                    <p class="text-muted">數據計算中</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 預估點數 -->
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="text-muted text-center">預估點數</h6>
+                    <div class="row text-center mt-2">
+                        <div class="col-6">
+                            <small class="text-muted">開盤</small>
+                            <h4 class="text-danger">+{{ report.predict_open }}</h4>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">收盤</small>
+                            <h4 class="text-danger">+{{ report.predict_close }}</h4>
+                        </div>
+                        <div class="col-6 mt-1">
+                            <small class="text-muted">最高</small>
+                            <h5 class="text-success">+{{ report.predict_high }}</h5>
+                        </div>
+                        <div class="col-6 mt-1">
+                            <small class="text-muted">最低</small>
+                            <h5 class="text-success">+{{ report.predict_low }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 信心指數 + 歷史命中率 -->
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">AI 信心指數</h6>
+                    <div class="display-4 fw-bold text-primary">{{ report.confidence }}%</div>
+                    <hr class="my-2">
+                    <div class="row">
+                        <div class="col-4">
+                            <h5 class="text-primary">{{ verification.week_accuracy }}%</h5>
+                            <small class="text-muted">7日</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="text-primary">{{ verification.month_accuracy }}%</h5>
+                            <small class="text-muted">30日</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="text-primary">{{ verification.quarter_accuracy }}%</h5>
+                            <small class="text-muted">90日</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 第二行：技術面分析 + 盤中監控 (2欄) -->
+    <!-- ========================================== -->
+    <div class="row g-3 mt-2">
+        <!-- 技術面分析 -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 border-secondary border-start border-4">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-graph-up-arrow text-secondary"></i> 技術面分析
+                        <span class="badge bg-info ms-1">即時</span>
+                    </h6>
+                    {% if technical %}
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <small class="text-muted">趨勢</small>
+                            <div><strong>{{ technical.trend }}</strong></div>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">RSI</small>
+                            <div>
+                                <span class="{% if technical.rsi > 70 %}text-danger{% elif technical.rsi < 30 %}text-success{% else %}text-warning{% endif %}">
+                                    <strong>{{ technical.rsi }}</strong>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mt-1">
+                            <small class="text-muted">MACD</small>
+                            <div><span class="{% if technical.macd_signal == '黃金交叉' %}text-success{% elif technical.macd_signal == '死亡交叉' %}text-danger{% else %}text-muted{% endif %}">
+                                <strong>{{ technical.macd_signal }}</strong>
+                            </span></div>
+                        </div>
+                        <div class="col-md-6 mt-1">
+                            <small class="text-muted">布林通道</small>
+                            <div><strong>{{ technical.bb_position }}</strong></div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        {% for signal in technical.signals %}
+                        <span class="badge {% if '✅' in signal %}bg-success{% elif '⚠️' in signal %}bg-warning{% elif '❌' in signal %}bg-danger{% else %}bg-info{% endif %} me-1">
+                            {{ signal }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">⚠️ 技術面數據計算中</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 盤中監控 -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 border-primary border-start border-4">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-clock-history text-primary"></i> 盤中監控
+                        <span class="badge {% if intraday.is_market_open %}bg-success{% else %}bg-secondary{% endif %} ms-1">
+                            {% if intraday.is_market_open %}🟢 交易中{% else %}⏸️ 已收盤{% endif %}
+                        </span>
+                    </h6>
+                    {% if intraday.actual %}
+                    <div class="row mt-2">
+                        <div class="col-md-4">
+                            <small class="text-muted">加權指數</small>
+                            <div><strong>{{ "%.2f"|format(intraday.actual.current) }}</strong></div>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">漲跌</small>
+                            <div>
+                                <span class="{% if intraday.actual.change > 0 %}text-danger{% elif intraday.actual.change < 0 %}text-success{% else %}text-muted{% endif %}">
+                                    <strong>{{ "%.2f"|format(intraday.actual.change) }}</strong>
+                                </span>
+                                <span class="{% if intraday.actual.change_percent > 0 %}text-danger{% elif intraday.actual.change_percent < 0 %}text-success{% else %}text-muted{% endif %}">
+                                    ({{ "%.2f"|format(intraday.actual.change_percent) }}%)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">成交量</small>
+                            <div>
+                                {% if intraday.actual.volume %}
+                                    <strong>{{ "{:,}".format(intraday.actual.volume) }}</strong>
+                                {% else %}
+                                    <strong class="text-muted">N/A</strong>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if intraday.comparison %}
+                    <div class="mt-2">
+                        <small class="text-muted">與預測比對：</small>
+                        <span class="{% if intraday.comparison.open_diff_percent > 0 %}text-danger{% elif intraday.comparison.open_diff_percent < 0 %}text-success{% else %}text-muted{% endif %}">
+                            開盤誤差 {{ "%.2f"|format(intraday.comparison.open_diff) }} 點
+                            ({{ "%.2f"|format(intraday.comparison.open_diff_percent) }}%)
+                        </span>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted mb-0">⏳ 等待開盤數據...</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 第三行：細項評分 + 風險提醒 (2欄) -->
+    <!-- ========================================== -->
+    <div class="row g-3 mt-2">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h6 class="mb-2"><i class="bi bi-bar-chart-fill"></i> 各項評分</h6>
+                    <div class="row">
+                        {% for key, value in report.score_breakdown.items() %}
+                        <div class="col-md-3 col-6 mb-2">
+                            <small class="text-muted">{{ key|replace('_', ' ')|title }}</small>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar {% if value >= 60 %}bg-danger{% elif value >= 40 %}bg-warning{% else %}bg-success{% endif %}"
+                                     style="width: {{ value }}%;">
+                                </div>
+                            </div>
+                            <small class="fw-bold">{{ value }}分</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 border-success border-start border-4 h-100">
+                <div class="card-body">
+                    <h6 class="text-success"><i class="bi bi-exclamation-triangle"></i> 風險提醒</h6>
+                    <p class="mb-0 small">{{ report.risk_warning }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 第四行：操作建議 (全寬) -->
+    <!-- ========================================== -->
+    <div class="row g-3 mt-2">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 border-warning border-start border-4">
+                <div class="card-body">
+                    <h6><i class="bi bi-lightbulb text-warning"></i> 操作建議</h6>
+                    <p class="mb-0">{{ report.suggestion }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 第五行：真實數據 - 美股 + ADR (2欄) -->
+    <!-- ========================================== -->
+    <div class="row g-3 mt-2">
+        <!-- 美股四大指數 -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 border-info border-start border-4 h-100">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-database-fill text-info"></i> 美股四大指數
+                        <span class="badge bg-success ms-1">真實</span>
+                        <span class="badge bg-danger ms-1">40%</span>
+                    </h6>
+                    {% if us_stock %}
+                    <div class="row text-center mt-2">
+                        {% for name, values in us_stock.items() %}
+                            {% if name != 'updated_at' and values is mapping %}
+                            <div class="col-6 col-md-3 mb-2">
+                                <small class="text-muted">{{ name|replace('_', ' ')|title }}</small>
+                                <div><strong>{{ "%.2f"|format(values.close) }}</strong></div>
+                                <div>
+                                    <span class="{% if values.change_points > 0 %}text-danger{% elif values.change_points < 0 %}text-success{% else %}text-muted{% endif %}">
+                                        {{ "%.2f"|format(values.change_points) }}
+                                    </span>
+                                    <span class="{% if values.change_percent > 0 %}text-danger{% elif values.change_percent < 0 %}text-success{% else %}text-muted{% endif %}">
+                                        ({{ "%.2f"|format(values.change_percent) }}%)
+                                    </span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted">更新：{{ us_stock.updated_at }}</small>
+                    {% else %}
+                    <p class="text-muted mb-0">⚠️ 無法取得數據</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 台積電ADR -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 border-warning border-start border-4 h-100">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-graph-up-arrow text-warning"></i> 台積電 ADR
+                        <span class="badge bg-success ms-1">真實</span>
+                        <span class="badge bg-danger ms-1">30%</span>
+                    </h6>
+                    {% if tsm_adr %}
+                    <div class="row text-center mt-2">
+                        <div class="col-6 col-md-3">
+                            <small class="text-muted">價格</small>
+                            <div><strong>${{ "%.2f"|format(tsm_adr.close) }}</strong></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <small class="text-muted">漲跌點</small>
+                            <div><span class="{% if tsm_adr.change_points > 0 %}text-danger{% elif tsm_adr.change_points < 0 %}text-success{% else %}text-muted{% endif %}">
+                                <strong>{{ "%.2f"|format(tsm_adr.change_points) }}</strong>
+                            </span></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <small class="text-muted">漲跌幅</small>
+                            <div><span class="{% if tsm_adr.change_percent > 0 %}text-danger{% elif tsm_adr.change_percent < 0 %}text-success{% else %}text-muted{% endif %}">
+                                <strong>{{ "%.2f"|format(tsm_adr.change_percent) }}%</strong>
+                            </span></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <small class="text-muted">換算台股</small>
+                            <div><strong>${{ "%.2f"|format(tsm_adr.tw_price) }}</strong></div>
+                        </div>
+                    </div>
+                    <small class="text-muted">匯率：{{ "%.2f"|format(tsm_adr.usd_twd) }}</small>
+                    {% else %}
+                    <p class="text-muted mb-0">⚠️ 無法取得數據</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 第六行：台指期 + VIX + 美元 + 油價 + 黃金 (5欄) -->
+    <!-- ========================================== -->
+    <div class="row g-3 mt-2">
+        <!-- 台指期夜盤 -->
+        <div class="col-md-2-4">
+            <div class="card shadow-sm border-0 border-danger border-start border-4 h-100">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-graph-up-arrow text-danger"></i> 台指期
+                        <span class="badge bg-success ms-1">真實</span>
+                        <span class="badge bg-danger ms-1">20%</span>
+                    </h6>
+                    {% if futures %}
+                    <div class="text-center mt-1">
+                        <div><strong>{{ "%.2f"|format(futures.close) }}</strong></div>
+                        <div>
+                            <span class="{% if futures.change > 0 %}text-danger{% elif futures.change < 0 %}text-success{% else %}text-muted{% endif %}">
+                                {{ "%.2f"|format(futures.change) }}
+                            </span>
+                            <span class="{% if futures.change_percent > 0 %}text-danger{% elif futures.change_percent < 0 %}text-success{% else %}text-muted{% endif %}">
+                                ({{ "%.2f"|format(futures.change_percent) }}%)
+                            </span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0 small">⚠️ 無數據</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- VIX 恐慌指數 -->
+        <div class="col-md-2-4">
+            <div class="card shadow-sm border-0 border-purple border-start border-4 h-100" style="border-color: #6f42c1 !important;">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-graph-up-arrow" style="color: #6f42c1;"></i> VIX
+                        <span class="badge bg-success ms-1">真實</span>
+                    </h6>
+                    {% if vix %}
+                    <div class="text-center mt-1">
+                        <div><strong>{{ "%.2f"|format(vix.close) }}</strong></div>
+                        <div><span class="badge {% if '恐慌' in vix.status %}bg-danger{% elif '警戒' in vix.status %}bg-warning{% else %}bg-success{% endif %} small">
+                            {{ vix.status }}
+                        </span></div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0 small">⚠️ 無數據</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 美元指數 -->
+        <div class="col-md-2-4">
+            <div class="card shadow-sm border-0 border-info border-start border-4 h-100">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-currency-dollar text-info"></i> 美元
+                        <span class="badge bg-success ms-1">真實</span>
+                    </h6>
+                    {% if usd_index %}
+                    <div class="text-center mt-1">
+                        <div><strong>{{ "%.2f"|format(usd_index.close) }}</strong></div>
+                        <div><span class="badge {% if '強勢' in usd_index.status %}bg-danger{% elif '弱勢' in usd_index.status %}bg-success{% else %}bg-warning{% endif %} small">
+                            {{ usd_index.status }}
+                        </span></div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0 small">⚠️ 無數據</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 油價 -->
+        <div class="col-md-2-4">
+            <div class="card shadow-sm border-0 border-dark border-start border-4 h-100">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-droplet text-dark"></i> 原油
+                        <span class="badge bg-success ms-1">真實</span>
+                    </h6>
+                    {% if oil %}
+                    <div class="text-center mt-1">
+                        <div><strong>${{ "%.2f"|format(oil.close) }}</strong></div>
+                        <div>
+                            <span class="{% if oil.change_points > 0 %}text-danger{% elif oil.change_points < 0 %}text-success{% else %}text-muted{% endif %}">
+                                {{ "%.2f"|format(oil.change_points) }}
+                            </span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0 small">⚠️ 無數據</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 黃金 -->
+        <div class="col-md-2-4">
+            <div class="card shadow-sm border-0 border-warning border-start border-4 h-100">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-gem text-warning"></i> 黃金
+                        <span class="badge bg-success ms-1">真實</span>
+                    </h6>
+                    {% if gold %}
+                    <div class="text-center mt-1">
+                        <div><strong>${{ "%.2f"|format(gold.close) }}</strong></div>
+                        <div>
+                            <span class="{% if gold.change_points > 0 %}text-danger{% elif gold.change_points < 0 %}text-success{% else %}text-muted{% endif %}">
+                                {{ "%.2f"|format(gold.change_points) }}
+                            </span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0 small">⚠️ 無數據</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 第七行：三大法人 (改為「即將上線」) -->
+    <!-- ========================================== -->
+    <div class="row g-3 mt-2">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 border-secondary border-start border-4">
+                <div class="card-body">
+                    <h6>
+                        <i class="bi bi-buildings text-secondary"></i> 三大法人買賣超
+                        <span class="badge bg-secondary ms-1">即將上線</span>
+                        <span class="badge bg-secondary ms-1">10%</span>
+                    </h6>
+                    <div class="text-center py-3">
+                        <i class="bi bi-clock-history" style="font-size: 2rem; color: #6c757d;"></i>
+                        <p class="text-muted mb-0 mt-2">
+                            <strong>數據整合中，即將上線</strong><br>
+                            <small>敬請期待</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+<!-- 圖表 (縮小版) - 放在最下面 -->
+<!-- ========================================== -->
+<div class="row g-2 mt-2">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body py-2">
+                <h6 class="text-muted small mb-1">📈 各項評分</h6>
+                <canvas id="radarChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body py-2">
+                <h6 class="text-muted small mb-1">📊 漲跌機率</h6>
+                <canvas id="doughnutChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- 按鈕 -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('web.full_report') }}" class="btn btn-primary btn-lg px-5">
+            <i class="bi bi-file-text"></i> 查看完整分析
+        </a>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 雷達圖 - 各項評分
+    const ctx1 = document.getElementById('radarChart');
+    if (ctx1) {
+        const labels = [];
+        const data = [];
+        {% for key, value in report.score_breakdown.items() %}
+        labels.push('{{ key|replace('_', ' ')|title }}');
+        data.push({{ value }});
+        {% endfor %}
+
+        new Chart(ctx1, {
+            type: 'radar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '評分',
+                    data: data,
+                    backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(13, 110, 253, 1)'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // 圓餅圖 - 漲跌機率
+    const ctx2 = document.getElementById('doughnutChart');
+    if (ctx2) {
+        new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['上漲 {{ report.up_probability }}%', '下跌 {{ report.down_probability }}%'],
+                datasets: [{
+                    data: [{{ report.up_probability }}, {{ report.down_probability }}],
+                    backgroundColor: ['#dc3545', '#198754'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

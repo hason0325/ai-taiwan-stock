@@ -1,0 +1,60 @@
+ai-taiwan-stock/
+│
+├── app/
+│   ├── __init__.py
+│   ├── models.py              # 資料庫模型
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── api.py             # REST API
+│   │   └── web.py             # 網頁路由
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── crawler/
+│   │   │   ├── __init__.py
+│   │   │   ├── us_stock.py    # 美股爬蟲
+│   │   │   ├── adr.py         # ADR爬蟲
+│   │   │   ├── futures.py     # 台指期
+│   │   │   ├── forex.py       # 美元/匯率
+│   │   │   ├── commodity.py   # 油價/黃金
+│   │   │   ├── vix.py         # VIX
+│   │   │   └── institution.py # 三大法人
+│   │   ├── analyzer/
+│   │   │   ├── __init__.py
+│   │   │   ├── scorer.py      # 評分系統
+│   │   │   └── report.py      # 報告生成
+│   │   └── scheduler/
+│   │       ├── __init__.py
+│   │       └── daily_job.py   # 每日排程
+│   ├── static/
+│   │   ├── css/
+│   │   │   └── style.css      # 自訂樣式
+│   │   └── js/
+│   │       └── main.js        # 前端互動
+│   └── templates/
+│       ├── base.html          # 基礎模板
+│       ├── index.html         # 首頁
+│       └── report.html        # 完整報告
+│
+├── instance/
+│   └── stock.db               # SQLite資料庫
+│
+├── logs/                      # 日誌目錄
+│   └── crawler.log
+│
+├── config.py                  # 設定檔
+├── requirements.txt           # 依賴套件
+├── run.py                     # 啟動程式
+└── README.md
+
+mysite/
+├── app/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── routes/
+│   ├── services/
+│   └── templates/
+├── instance/
+├── config.py
+├── run.py
+├── wsgi.py
+└── requirements.txt

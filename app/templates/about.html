@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <h1 class="text-center mb-4">
+                        <i class="bi bi-robot text-primary"></i>
+                        AI 台股決策平台
+                    </h1>
+
+                    <p class="text-center text-muted mb-4">
+                        版本 V1.2 | 最後更新：{{ server_time }}
+                    </p>
+
+                    <hr>
+
+                    <!-- 系統概述 -->
+                    <h5 class="mt-4 text-primary">📌 系統概述</h5>
+                    <p>
+                        AI 台股決策平台是一個<strong>智慧型盤前決策輔助系統</strong>，
+                        透過爬取全球金融市場數據，結合 AI 評分模型，
+                        每日開盤前提供客觀的台股方向預測與操作建議。
+                    </p>
+                    <div class="alert alert-light border border-info">
+                        <p class="mb-0 small">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <strong>即時數據：</strong> 美股四大指數、台積電ADR、台指期夜盤、VIX恐慌指數、美元指數、WTI原油、黃金
+                        </p>
+                        <p class="mb-0 small mt-1">
+                            <i class="bi bi-graph-up-arrow text-primary"></i>
+                            <strong>AI分析：</strong> 多空評分、市場熱度、技術面分析、盤中監控
+                        </p>
+                    </div>
+
+                    <hr>
+
+                    <!-- 系統資訊 -->
+                    <h5 class="mt-4 text-primary">🖥️ 系統資訊</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><strong>版本：</strong>V1.2</li>
+                                <li><strong>時區：</strong>{{ config.TIMEZONE }}</li>
+                                <li><strong>伺服器時間：</strong>{{ server_time }}</li>
+                                <li><strong>資料庫：</strong>SQLite</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><strong>排程時間：</strong>每日 06:30 (台灣時間)</li>
+                                <li><strong>報告產出：</strong>每日 07:00</li>
+                                <li><strong>數據來源：</strong>即時爬蟲</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- AI 評分權重 -->
+                    <h5 class="mt-4 text-primary">🧠 AI 評分權重</h5>
+                    <p class="text-muted small">總計 = 100%</p>
+
+                    <div class="row mt-3">
+                        <!-- 美股 40% -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">📈 美股四大指數</span>
+                                        <span class="badge bg-danger fs-6">40%</span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-danger" style="width: 40%;"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        Nasdaq、S&P500、道瓊、費半<br>
+                                        <span class="text-secondary">費半權重 35% (與台股關聯最強)</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ADR 30% -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">🏭 台積電 ADR</span>
+                                        <span class="badge bg-warning fs-6">30%</span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" style="width: 30%;"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        TSM ADR 漲跌幅<br>
+                                        <span class="text-secondary">ADR 1 股 = 5 股台積電 (2330.TW)</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 台指期 20% -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">📊 台指期夜盤</span>
+                                        <span class="badge bg-info fs-6">20%</span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-info" style="width: 20%;"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        夜盤收盤漲跌幅<br>
+                                        <span class="text-secondary">交易時段：17:15 ~ 次日 05:00</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 其他 10% -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light border-0 h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">🌍 其他綜合因素</span>
+                                        <span class="badge bg-secondary fs-6">10%</span>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-secondary" style="width: 10%;"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        VIX恐慌指數、美元指數、油價、黃金<br>
+                                        <span class="text-secondary">持續擴充中</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 功能列表 -->
+                    <h5 class="mt-4 text-primary">⚡ 核心功能</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li>✅ <strong>即時數據</strong> - 美股、ADR、台指期夜盤</li>
+                                <li>✅ <strong>AI 評分</strong> - 多空判斷、漲跌機率</li>
+                                <li>✅ <strong>市場熱度</strong> - 綜合恐慌指數、美元、油價</li>
+                                <li>✅ <strong>技術面分析</strong> - 均線、RSI、MACD</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li>✅ <strong>盤中監控</strong> - 即時加權指數比對</li>
+                                <li>✅ <strong>歷史績效</strong> - 自動記錄、命中率計算</li>
+                                <li>✅ <strong>完整報告</strong> - 所有數據一目了然</li>
+                                <li>✅ <strong>自動排程</strong> - 每日 06:30 自動分析</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- 數據來源 -->
+                    <h5 class="mt-4 text-primary">📡 數據來源</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>數據項目</th>
+                                    <th>來源</th>
+                                    <th>狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>美股四大指數</td>
+                                    <td>Yahoo Finance</td>
+                                    <td><span class="badge bg-success">✅ 即時</span></td>
+                                </tr>
+                                <tr>
+                                    <td>台積電 ADR</td>
+                                    <td>Yahoo Finance</td>
+                                    <td><span class="badge bg-success">✅ 即時</span></td>
+                                </tr>
+                                <tr>
+                                    <td>台指期夜盤</td>
+                                    <td>臺灣期交所</td>
+                                    <td><span class="badge bg-success">✅ 即時</span></td>
+                                </tr>
+                                <tr>
+                                    <td>VIX 恐慌指數</td>
+                                    <td>Yahoo Finance</td>
+                                    <td><span class="badge bg-success">✅ 即時</span></td>
+                                </tr>
+                                <tr>
+                                    <td>美元指數</td>
+                                    <td>Yahoo Finance</td>
+                                    <td><span class="badge bg-success">✅ 即時</span></td>
+                                </tr>
+                                <tr>
+                                    <td>WTI 原油</td>
+                                    <td>Yahoo Finance</td>
+                                    <td><span class="badge bg-success">✅ 即時</span></td>
+                                </tr>
+                                <tr>
+                                    <td>黃金</td>
+                                    <td>Yahoo Finance</td>
+                                    <td><span class="badge bg-success">✅ 即時</span></td>
+                                </tr>
+                                <tr>
+                                    <td>三大法人</td>
+                                    <td>整合中</td>
+                                    <td><span class="badge bg-warning">⏳ 即將上線</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <!-- 免責聲明 -->
+                    <h5 class="mt-4 text-danger">⚠️ 免責聲明</h5>
+                    <div class="alert alert-light border border-danger">
+                        <p class="mb-0 small">
+                            <strong>1. 本平台僅供決策輔助參考</strong><br>
+                            所有數據與分析結果不構成任何投資建議，亦不保證獲利。
+                        </p>
+                        <p class="mb-0 small mt-2">
+                            <strong>2. 投資風險自負</strong><br>
+                            投資人應自行判斷市場風險，盈虧自負。建議搭配其他分析工具使用。
+                        </p>
+                        <p class="mb-0 small mt-2">
+                            <strong>3. 數據準確性</strong><br>
+                            數據來源為公開第三方平台，本平台不保證數據的絕對準確性與即時性。
+                        </p>
+                        <p class="mb-0 small mt-2">
+                            <strong>4. 非即時交易建議</strong><br>
+                            本平台為盤前決策輔助工具，不提供盤中即時交易訊號。
+                        </p>
+                    </div>
+
+                    <hr>
+
+                    <!-- 版權 -->
+                    <div class="text-center text-muted small mt-4">
+                        <p class="mb-0">
+                            <i class="bi bi-c-circle"></i> 2026 AI 台股決策平台
+                        </p>
+                        <p class="mb-0">
+                            技術架構：Flask + SQLite + Bootstrap + Selenium + Chart.js
+                        </p>
+                    </div>
+
+                    <!-- 返回首頁 -->
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-primary">
+                            <i class="bi bi-house"></i> 返回首頁
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
